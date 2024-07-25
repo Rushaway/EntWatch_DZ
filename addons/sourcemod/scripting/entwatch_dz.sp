@@ -1,6 +1,6 @@
 #pragma semicolon 1
 #pragma newdecls required
-#pragma dynamic 131072
+#pragma dynamic 128 * 1024
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
