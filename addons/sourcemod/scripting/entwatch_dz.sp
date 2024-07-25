@@ -1,6 +1,6 @@
 #pragma semicolon 1
 #pragma newdecls required
-#pragma dynamic 131072
+#pragma dynamic 128 * 1024
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
@@ -48,7 +48,9 @@ float	g_fDelayUse = 3.0;
 // Purpose: Plugin Variables
 //-------------------------------------------------------
 bool g_bConfigLoaded = false;
+bool g_bMathCounterRegistered = false;
 bool g_bIsAdmin[MAXPLAYERS+1] = {false,...};
+bool g_bIsFakeClient[MAXPLAYERS+1] = {false,...};
 char g_sMap[PLATFORM_MAX_PATH];
 char g_sSteamIDs[MAXPLAYERS+1][32];
 char g_sSteamIDs_short[MAXPLAYERS+1][32];
@@ -87,7 +89,7 @@ public Plugin myinfo =
 	name = "EntWatch",
 	author = "DarkerZ[RUS], AgentWesker, notkoen, sTc2201, maxime1907, Cmer, .Rushaway, Dolly",
 	description = "Notify players about entity interactions.",
-	version = "3.DZ.61",
+	version = "3.DZ.62",
 	url = "dark-skill.ru"
 };
  
@@ -172,6 +174,17 @@ public void OnPluginStart()
 	{
 		LoadConfig();
 		LoadScheme();
+
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (!IsClientInGame(i))
+				continue;
+
+			OnClientConnected(i);
+			OnClientPutInServer(i);
+			OnClientCookiesCached(i);
+			OnClientPostAdminCheck(i);
+		}
 	}
 	
 	#if defined EW_MODULE_EBAN
@@ -223,6 +236,36 @@ public void OnPluginStart()
 	
 	#if defined EW_MODULE_NATIVES
 	EWM_Natives_OnPluginStart();
+	#endif
+}
+
+public void OnAllPluginsLoaded()
+{
+	#if defined EW_MODULE_HUD
+	EWM_Hud_OnAllPluginsLoaded();
+	#endif
+	#if defined EW_MODULE_MENU
+	EWM_Menu_OnAllPluginsLoaded();
+	#endif
+}
+
+public void OnLibraryAdded(const char[] name)
+{
+	#if defined EW_MODULE_HUD
+	EWM_Hud_OnLibraryAdded(name);
+	#endif
+	#if defined EW_MODULE_MENU
+	EWM_Menu_OnLibraryAdded(name);
+	#endif
+}
+
+public void OnLibraryRemoved(const char[] name)
+{
+	#if defined EW_MODULE_HUD
+	EWM_Hud_OnLibraryRemoved(name);
+	#endif
+	#if defined EW_MODULE_MENU
+	EWM_Menu_OnLibraryRemoved(name);
 	#endif
 }
 
@@ -329,6 +372,8 @@ public void Event_RoundEnd(Event hEvent, const char[] sName, bool bDontBroadcast
 		SDKUnhook(iEntity, SDKHook_EndTouch, OnTrigger);
 		SDKUnhook(iEntity, SDKHook_StartTouch, OnTrigger);
 	}
+	// Reset all data
+	g_bMathCounterRegistered = false;
 	g_ItemList.Clear();
 	g_TriggerArray.Clear();
 	#if defined EW_MODULE_PHYSBOX
@@ -421,6 +466,12 @@ stock void EWM_Drop_Forward(Handle hEvent)
 	}
 }
 
+public void OnClientConnected(int iClient)
+{
+	if (IsFakeClient(iClient))
+		g_bIsFakeClient[iClient] = true;
+}
+
 public void OnClientPutInServer(int iClient)
 {
 	SDKHook(iClient, SDKHook_WeaponDropPost, OnWeaponDrop);
@@ -434,7 +485,11 @@ public void OnClientPutInServer(int iClient)
 	FormatEx(g_sSteamIDs_short[iClient], sizeof(g_sSteamIDs_short[]), "%s", sSteamID);
 	ReplaceString(g_sSteamIDs_short[iClient], sizeof(g_sSteamIDs_short[]), "STEAM_", "", true);
 	g_iUserIDs[iClient] = GetClientUserId(iClient);
-	
+
+	// No need to run the next functions for fake clients
+	if (g_bIsFakeClient[iClient])
+		return;
+
 	#if defined EW_MODULE_EBAN
 	EWM_Eban_OnClientPutInServer(iClient);
 	#endif
@@ -458,7 +513,7 @@ public void OnClientCookiesCached(int iClient)
 
 public void OnClientPostAdminCheck(int iClient)
 {
-	if(!IsValidClient(iClient) || !IsClientConnected(iClient) || IsFakeClient(iClient)) return;
+	if(!IsValidClient(iClient) || !IsClientConnected(iClient) || g_bIsFakeClient[iClient]) return;
 	#if defined EW_MODULE_OFFLINE_EBAN
 	EWM_OfflineEban_OnClientPostAdminCheck(iClient);
 	#endif
@@ -1132,7 +1187,7 @@ public void OnItemSpawned(int iEntity)
 public void OnMathSpawned(int iEntity)
 {
 	//In case the math entity spawns just before the weapon entity (?)
-	CreateTimer(1.5, Timer_OnMathSpawned, iEntity);
+	CreateTimer(1.5, Timer_OnMathSpawned, iEntity, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public Action Timer_OnMathSpawned(Handle timer, int iEntity)
@@ -1145,6 +1200,7 @@ public Action Timer_OnMathSpawned(Handle timer, int iEntity)
 		g_ItemList.GetArray(i, ItemTest, sizeof(ItemTest));
 		if (RegisterMath(ItemTest, iEntity))
 		{
+			g_bMathCounterRegistered = true;
 			g_ItemList.SetArray(i, ItemTest, sizeof(ItemTest));
 			return Plugin_Stop;
 		}
@@ -1179,7 +1235,7 @@ public void OnButtonSpawned(int iEntity) //Button with parent spawns after weapo
 public void OnTriggerSpawned(int iEntity)
 {
 	//In case the trigger entity spawns just before the weapon entity (?)
-	CreateTimer(0.5, Timer_OnTriggerSpawned, iEntity);
+	CreateTimer(0.5, Timer_OnTriggerSpawned, iEntity, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public Action Timer_OnTriggerSpawned(Handle timer, int iEntity)
@@ -1374,6 +1430,9 @@ public Action OnButtonUse(int iButton, int iActivator, int iCaller, UseType uTyp
 //-------------------------------------------------------
 public void Event_OutValue(const char[] sOutput, int iCaller, int iActivator, float Delay)
 {
+	if(!g_bConfigLoaded || !g_bMathCounterRegistered)
+		return;
+
 	for(int i = 0; i < g_ItemList.Length; i++)
 	{
 		class_ItemList ItemTest;
