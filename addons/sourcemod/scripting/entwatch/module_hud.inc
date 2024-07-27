@@ -186,7 +186,7 @@ stock void EWM_Hud_OnClientDisconnect(int iClient)
 
 stock void EWM_Hud_OnClientCookiesCached(int iClient)
 {
-	if (!IsValidClient(iClient) || g_bIsFakeClient[iClient])
+	if (!IsValidClient(iClient) || IsFakeClient(iClient))
 		return;
 
 	char sBuffer_cookie[32];
@@ -399,7 +399,7 @@ public Action EWM_Hud_Timer_DisplayHUD(Handle timer, int client)
 			for(int i = 1; i <= MaxClients; i++)
 			{
 				//if(IsClientInGame(i) && !IsFakeClient(i) && g_CSettings_Hud[i].Display && (!IsVoteInProgress() || !IsClientInVotePool(i)) && GetClientMenu(i) == MenuSource_None)
-				if(IsClientInGame(i) && !g_bIsFakeClient[i] && g_CSettings_Hud[i].Display && GetClientMenu(i) == MenuSource_None)
+				if(IsClientInGame(i) && !IsFakeClient(i) && g_CSettings_Hud[i].Display && GetClientMenu(i) == MenuSource_None)
 				{
 					bool bRotation = false;
 					int iTeam = GetClientTeam(i);

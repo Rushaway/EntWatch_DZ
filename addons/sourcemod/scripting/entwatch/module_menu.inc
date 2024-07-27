@@ -15,12 +15,12 @@ stock void EWM_Menu_OnPluginStart()
 
 public void EWM_Menu_OnAllPluginsLoaded()
 {
-	EWM_Menu_OnPluginStart();
+	// Nothing here yet.
 }
 
 public void EWM_Menu_OnLibraryAdded(const char[] sName)
 {
-	if (strcmp(sName, "adminmenu") == 0) EWM_Menu_OnPluginStart();
+	// Nothing here yet.
 }
 
 // Safeguard against adminmenu unloading
@@ -153,7 +153,7 @@ void EWM_Menu_PM_EBanList(int iClient)
 	bool bNotFound = true;
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if(!IsClientInGame(i) || g_bIsFakeClient[i] || g_EbanClients[i].Banned) continue;
+		if(!IsClientInGame(i) || IsFakeClient(i) || g_EbanClients[i].Banned) continue;
 		
 		bNotFound = false;
 		FormatEx(sIndexTemp, sizeof(sIndexTemp), "%i", g_iUserIDs[i]);
@@ -178,7 +178,7 @@ void EWM_Menu_PM_EUnBanList(int iClient)
 	bool bNotFound = true;
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if(!IsClientInGame(i) || g_bIsFakeClient[i] || !g_EbanClients[i].Banned) continue;
+		if(!IsClientInGame(i) || IsFakeClient(i) || !g_EbanClients[i].Banned) continue;
 		
 		bNotFound = false;
 		FormatEx(sIndexTemp, sizeof(sIndexTemp), "%i", g_iUserIDs[i]);
@@ -389,7 +389,7 @@ void EWM_Menu_PM_ItemTransfer(int iClient, int iItemIndex)
 	bool bNotFound = true;
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if(!IsClientInGame(i) || g_bIsFakeClient[i] || !IsPlayerAlive(i) || i == ItemTest.OwnerID) continue;
+		if(!IsClientInGame(i) || IsFakeClient(i) || !IsPlayerAlive(i) || i == ItemTest.OwnerID) continue;
 		#if defined EW_MODULE_EBAN
 		if(g_EbanClients[i].Banned) continue;
 		#endif

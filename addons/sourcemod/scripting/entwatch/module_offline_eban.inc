@@ -95,7 +95,7 @@ public void EWM_OfflineEban_OnClientPostAdminCheck(int iClient)
 // Write information about the disconnected player to the plugin database
 public void EWM_OfflineEban_OnClientDisconnect(int iClient)
 {
-	if(!IsValidClient(iClient) || !IsClientConnected(iClient) || IsClientSourceTV(iClient) || g_bIsFakeClient[iClient]) return;
+	if(!IsValidClient(iClient) || !IsClientConnected(iClient) || IsClientSourceTV(iClient) || IsFakeClient(iClient)) return;
 	
 	char sClient_Name[32];
 	GetClientName(iClient, sClient_Name, sizeof(sClient_Name));
@@ -130,7 +130,7 @@ public void EWM_OfflineEban_OnClientDisconnect(int iClient)
 // Update the record in the plugin database when the player picks up an item
 public void EWM_OfflineEban_UpdateItemName(int iClient, const char[] sNameItem)
 {
-	if(g_bIsFakeClient[iClient]) return;
+	if(IsFakeClient(iClient)) return;
 	
 	char sClient_Name[32];
 	GetClientName(iClient, sClient_Name, sizeof(sClient_Name));

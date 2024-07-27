@@ -1,6 +1,6 @@
 #pragma semicolon 1
 #pragma newdecls required
-#pragma dynamic 128 * 1024
+#pragma dynamic 128 * 2048
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
@@ -50,7 +50,6 @@ float	g_fDelayUse = 3.0;
 bool g_bConfigLoaded = false;
 bool g_bMathCounterRegistered = false;
 bool g_bIsAdmin[MAXPLAYERS+1] = {false,...};
-bool g_bIsFakeClient[MAXPLAYERS+1] = {false,...};
 char g_sMap[PLATFORM_MAX_PATH];
 char g_sSteamIDs[MAXPLAYERS+1][32];
 char g_sSteamIDs_short[MAXPLAYERS+1][32];
@@ -177,10 +176,9 @@ public void OnPluginStart()
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (!IsClientInGame(i))
+			if (!IsClientInGame(i) || IsFakeClient(i))
 				continue;
 
-			OnClientConnected(i);
 			OnClientPutInServer(i);
 			OnClientCookiesCached(i);
 			OnClientPostAdminCheck(i);
@@ -466,12 +464,6 @@ stock void EWM_Drop_Forward(Handle hEvent)
 	}
 }
 
-public void OnClientConnected(int iClient)
-{
-	if (IsFakeClient(iClient))
-		g_bIsFakeClient[iClient] = true;
-}
-
 public void OnClientPutInServer(int iClient)
 {
 	SDKHook(iClient, SDKHook_WeaponDropPost, OnWeaponDrop);
@@ -487,7 +479,7 @@ public void OnClientPutInServer(int iClient)
 	g_iUserIDs[iClient] = GetClientUserId(iClient);
 
 	// No need to run the next functions for fake clients
-	if (g_bIsFakeClient[iClient])
+	if (IsFakeClient(iClient))
 		return;
 
 	#if defined EW_MODULE_EBAN
@@ -513,7 +505,8 @@ public void OnClientCookiesCached(int iClient)
 
 public void OnClientPostAdminCheck(int iClient)
 {
-	if(!IsValidClient(iClient) || !IsClientConnected(iClient) || g_bIsFakeClient[iClient]) return;
+	if(!IsValidClient(iClient) || !IsClientConnected(iClient) || IsFakeClient(iClient)) return;
+
 	#if defined EW_MODULE_OFFLINE_EBAN
 	EWM_OfflineEban_OnClientPostAdminCheck(iClient);
 	#endif

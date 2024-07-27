@@ -506,7 +506,7 @@ void EWM_Eban_SQLUnBan_Error(Database hDatabase, any Data, int iNumQueries, cons
 // Function to send a request about active player bans
 void EWM_Eban_Update_Client(int iClient)
 {
-	if (g_bIsFakeClient[iClient])
+	if (IsFakeClient(iClient))
 		return;
 
 	if(g_iDBStatus == 4)
@@ -645,21 +645,24 @@ stock void EWM_Eban_OnMapStart()
 
 stock void EWM_Eban_OnClientPutInServer(int iClient)
 {
+	if (!IsClientConnected(iClient) || IsFakeClient(iClient))
+		return;
+
 	EWM_Eban_CleanData_Client(iClient);
 	EWM_Eban_Update_Client(iClient);
 }
 
 stock void EWM_Eban_OnClientDisconnect(int iClient)
 {
+	if (!IsClientConnected(iClient) || IsFakeClient(iClient))
+		return;
+
 	EWM_Eban_CleanData_Client(iClient);
 	g_iClientEbansNumber[iClient] = 0;
 }
 
 void EWM_Eban_CleanData_Client(int iClient)
 {
-	if (g_bIsFakeClient[iClient])
-		return;
-
 	g_EbanClients[iClient].Banned = false;
 	FormatEx(g_EbanClients[iClient].Admin_Name, 32, "");
 	FormatEx(g_EbanClients[iClient].Admin_SteamID, 64, "");
@@ -673,7 +676,7 @@ void EWM_Eban_CleanData_All()
 	for(int i=1; i<=MaxClients; i++)
 	{
 		EWM_Eban_CleanData_Client(i);
-		if(IsClientInGame(i) && !g_bIsFakeClient[i]) EWM_Eban_Update_Client(i);
+		if(IsClientInGame(i) && !IsFakeClient(i)) EWM_Eban_Update_Client(i);
 	}
 }
 
