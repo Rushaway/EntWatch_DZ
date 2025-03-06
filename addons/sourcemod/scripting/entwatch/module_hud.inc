@@ -721,22 +721,16 @@ public void DisplayCookieMenu(int iClient)
 
 	menu.SetTitle("%T %T %T", "EW_Tag", iClient, "HUD", iClient, "Client Settings", iClient);
 
-	char hudisplay[64], hudtype[64], hudname[64], hudcolor[64], hudpos[64], huditems[64], hudtime[64];
+	char hudisplay[64], hudname[64], huditems[64], hudtime[64];
 	FormatEx(hudisplay, sizeof(hudisplay), "%T", "Status", iClient);
-	FormatEx(hudtype, sizeof(hudtype), "%T", "Hud Type", iClient);
 	FormatEx(hudname, sizeof(hudname), "%T", "Hud Names", iClient);
-	FormatEx(hudcolor, sizeof(hudcolor), "%T", "Hud Color", iClient);
-	FormatEx(hudpos, sizeof(hudpos), "%T", "Hud Position", iClient);
 	FormatEx(huditems, sizeof(huditems), "%T", "Hud Item Number", iClient);
 	FormatEx(hudtime, sizeof(hudtime), "%T", "Hud Rotation Time", iClient); 
 
 	menu.AddItem("display", hudisplay);
-	menu.AddItem("type", hudtype);
 	menu.AddItem("name", hudname);
 	menu.AddItem("items", huditems);
 	menu.AddItem("time", hudtime);
-	menu.AddItem("pos", hudpos);
-	menu.AddItem("color", hudcolor);
 
 	menu.ExitBackButton = true;
 	menu.ExitButton = true;
@@ -760,11 +754,6 @@ public int CookieMenuHandler(Menu menu, MenuAction action, int param1, int param
 				else
 					FormatEx(display, sizeof(display), "%T: %T", "Status", param1, "Disabled", param1);
 
-				return RedrawMenuItem(display);
-			}
-			else if (strcmp(info, "type", false) == 0)
-			{
-				FormatEx(display, sizeof(display), "%T: %T", "Hud Type", param1, "KeyHintText", param1);
 				return RedrawMenuItem(display);
 			}
 			else if (strcmp(info, "name", false) == 0)
