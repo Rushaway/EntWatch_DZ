@@ -333,7 +333,6 @@ stock void EWM_Eban_BanClient(int iClient, int iAdmin, int iDuration, char[] sRe
 	{
 		CPrintToChat(iClient, "%s%t %s%s %s%t %s%N %s%t.", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Name, sAdmin_Name, g_SchemeConfig.Color_Disabled, "Restricted", g_SchemeConfig.Color_Name, iClient, g_SchemeConfig.Color_Disabled, "Temporary");
 		CPrintToChat(iClient, "%s%t %s%t", g_SchemeConfig.Color_Tag, "EW_Tag", g_SchemeConfig.Color_Warning, "Invalid SteamID");
-		LogAction(-1, -1, "%N EBanned %N temporary (Invalid SteamID) Steamid2: %s | Steamid3 short: %s",iAdmin , iClient, g_sSteamIDs[iClient], g_sSteamIDs_short[iClient]);
 		return;
 	}
 
